@@ -248,7 +248,7 @@
         <div id="contractorView" class="hidden space-y-8">
              <header class="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
                 <h2 class="text-3xl font-bold text-gray-900">Your Assigned Projects</h2>
-                <p class="text-gray-600 mt-1">Update task status and quantities below. Press 'Send to Client' in the header to save your changes.</p>
+                <p class="text-gray-600 mt-1">Update task status and quantities below. Press 'Update Database' in the header to save your changes.</p>
              </header>
              
             <div id="contractorProjectCardsList" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2260,7 +2260,7 @@
                         syncDataButton.querySelector('.btn-text').textContent = 'Send to Client';
                         syncDataButton.disabled = false;
                         renderContractorProjectCards();
-                        showToast("Data loaded from local cache. Click 'Send to Client' to sync updates.", 'warning');
+                        showToast("Data loaded from local cache. Click 'Update Database' to sync updates.", 'warning');
                         showView('contractor');
                     } else {
                         // Invalid state, log out
@@ -2317,7 +2317,7 @@
                 syncDataButton.disabled = false;
                 
                 renderContractorProjectCards();
-                showToast("Data loaded from local cache. Click 'Send to Client' to sync updates.", 'warning');
+                showToast("Data loaded from local cache. Click 'Update Database' to sync updates.", 'warning');
                 showView('contractor');
                 return; 
             }
