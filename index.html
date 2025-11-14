@@ -134,6 +134,14 @@
             from { opacity: 1; }
             to { opacity: 0; transform: translateX(100%); }
         }
+        /* Dropdown Styles */
+        #userDropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 50;
+            min-width: 10rem;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -159,14 +167,27 @@
             <!-- Auth Controls -->
             <div id="auth-controls" class="hidden bg-white p-2 rounded-lg shadow-sm border border-gray-200 flex items-center space-x-3">
                 <span id="currentUser" class="text-sm text-gray-700 font-medium px-2"></span>
-                <button id="syncDataButton" class="rounded-md bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 shadow-sm hover:bg-indigo-100 transition-colors duration-150 form-button flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <button id="syncDataButton" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors duration-150 form-button flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     <svg class="w-4 h-4 btn-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m-15.357-2a8.001 8.001 0 0015.357 2m0 0H15"></path></svg>
                     <span class="btn-text">Update Database</span>
-                    <span class="btn-spinner hidden btn-spinner-sm text-indigo-600"></span>
+                    <span class="btn-spinner hidden btn-spinner-sm text-white"></span>
                 </button>
-                <button id="logoutButton" class="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-100 transition-colors duration-150 form-button">
-                    Log Out
-                </button>
+                
+                <!-- NEW: Dropdown Menu for Logout -->
+                <div class="relative">
+                    <button id="dropdownToggle" type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors duration-150 form-button">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
+                    </button>
+                    
+                    <div id="userDropdown" class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="dropdownToggle">
+                        <div class="py-1" role="none">
+                            <button id="logoutButton" class="w-full text-left rounded-md px-4 py-2 text-sm text-red-700 hover:bg-red-50 hover:text-red-800 transition-colors duration-150 form-button flex items-center gap-2" role="menuitem">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                Log Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -594,6 +615,10 @@
         const currentUserEl = document.getElementById('currentUser');
         const logoutButton = document.getElementById('logoutButton');
         const syncDataButton = document.getElementById('syncDataButton');
+        
+        // NEW Dropdown elements
+        const dropdownToggle = document.getElementById('dropdownToggle');
+        const userDropdown = document.getElementById('userDropdown');
         
         const contractorLoginForm = document.getElementById('contractorLoginForm');
         const contractorUsernameInput = document.getElementById('contractorUsername');
@@ -2174,9 +2199,12 @@
         }
 
         function handleLogout() {
+            // Hide dropdown immediately
+            userDropdown.classList.add('hidden');
+
             if (hasUnsyncedChanges) {
                 if (currentRole === 'contractor') {
-                    // NEW: Contractor immediately performs an async sync then logs out.
+                    // Contractor immediately performs an async sync then logs out.
                     showToast("Unsaved work detected. Sending updates before logging out...", 'warning');
                     syncAllContractorProjects().finally(() => {
                         performLogout();
@@ -2328,6 +2356,25 @@
                 showFormLoading(contractorLoginForm, false);
             }
         }
+        
+        // --- DROPDOWN LOGIC ---
+        function toggleDropdown(e) {
+            e.stopPropagation(); // Prevent document click listener from firing immediately
+            userDropdown.classList.toggle('hidden');
+        }
+
+        function closeDropdown() {
+            userDropdown.classList.add('hidden');
+        }
+        
+        dropdownToggle.addEventListener('click', toggleDropdown);
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!authControls.contains(e.target)) {
+                closeDropdown();
+            }
+        });
         
         contractorLoginForm.addEventListener('submit', handleContractorLogin);
 
