@@ -167,13 +167,14 @@
             <!-- Auth Controls -->
             <div id="auth-controls" class="hidden bg-white p-2 rounded-lg shadow-sm border border-gray-200 flex items-center space-x-3">
                 <span id="currentUser" class="text-sm text-gray-700 font-medium px-2"></span>
-                <button id="syncDataButton" class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors duration-150 form-button flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <!-- Updated button classes to green -->
+                <button id="syncDataButton" class="rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-colors duration-150 form-button flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     <svg class="w-4 h-4 btn-text" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m-15.357-2a8.001 8.001 0 0015.357 2m0 0H15"></path></svg>
                     <span class="btn-text">Update Database</span>
                     <span class="btn-spinner hidden btn-spinner-sm text-white"></span>
                 </button>
                 
-                <!-- NEW: Dropdown Menu for Logout -->
+                <!-- Dropdown Menu for Logout -->
                 <div class="relative">
                     <button id="dropdownToggle" type="button" class="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 transition-colors duration-150 form-button">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg>
@@ -248,7 +249,7 @@
         <div id="contractorView" class="hidden space-y-8">
              <header class="p-6 bg-white rounded-xl shadow-lg border border-gray-200">
                 <h2 class="text-3xl font-bold text-gray-900">Your Assigned Projects</h2>
-                <p class="text-gray-600 mt-1">Update task status and quantities below. Press 'Update Database' in the header to save your changes.</p>
+                <p class="text-gray-600 mt-1">Update task status and quantities below. Press 'Update to Database' in the header to save your changes.</p>
              </header>
              
             <div id="contractorProjectCardsList" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -743,6 +744,27 @@
                 loadingView.classList.remove('hidden');
             }
         }
+        
+        // NEW: Setter function to guarantee sync button update
+        function setUnsyncedChanges(status) {
+            if (hasUnsyncedChanges !== status) {
+                hasUnsyncedChanges = status;
+                updateSyncButtonState();
+            }
+        }
+
+        // Function to toggle button state and text
+        function updateSyncButtonState() {
+            syncDataButton.disabled = !hasUnsyncedChanges;
+
+            if (currentRole === 'admin') {
+                syncDataButton.querySelector('.btn-text').textContent = 'Update Database';
+            } else if (currentRole === 'contractor') {
+                syncDataButton.querySelector('.btn-text').textContent = 'Update to Database';
+            }
+            // The disabled:opacity-50 class in the HTML handles the fading effect based on the `disabled` attribute.
+        }
+
 
         // --- TOAST NOTIFICATION ---
         function showToast(message, type = 'success') {
@@ -911,8 +933,7 @@
                         currentRole = 'admin';
 
                         currentUserEl.textContent = 'Logged in as Admin';
-                        syncDataButton.querySelector('.btn-text').textContent = 'Update Database';
-                        syncDataButton.disabled = false; 
+                        updateSyncButtonState(); // Update button state
                         renderAdminProjects();
                         showView('admin');
                     } catch (error) {
@@ -1444,7 +1465,7 @@
             
             closeModal(addProjectModal);
             showToast("Project added locally. Press 'Update Database' to sync.");
-            hasUnsyncedChanges = true; 
+            setUnsyncedChanges(true); // USE SETTER
         }
 
         function handleOpenEditProjectModal(e) {
@@ -1503,7 +1524,7 @@
             
             closeModal(editProjectModal);
             showToast("Project updated locally. Press 'Update Database' to sync.");
-            hasUnsyncedChanges = true;
+            setUnsyncedChanges(true); // USE SETTER
         }
 
         async function handleAddTask(e) {
@@ -1548,7 +1569,7 @@
 
             closeModal(addTaskModal);
             showToast("Task added locally. Press 'Update Database' to sync.");
-            hasUnsyncedChanges = true;
+            setUnsyncedChanges(true); // USE SETTER
         }
 
         function handleOpenEditTaskModal(e) {
@@ -1650,7 +1671,7 @@
             
             closeModal(editTaskModal);
             showToast("Task updated locally. Press 'Update Database' to sync.");
-            hasUnsyncedChanges = true;
+            setUnsyncedChanges(true); // USE SETTER
         }
         
         function handleToggleCollapsible(e) {
@@ -1695,7 +1716,7 @@
                     if (task.status !== newStatus) {
                         task._lastStatus = task.status;
                         task.status = newStatus;
-                        hasUnsyncedChanges = true;
+                        setUnsyncedChanges(true); // USE SETTER
                     }
 
                     taskFound = true;
@@ -1738,7 +1759,7 @@
                     if (task.qtyCompleted !== newQty) {
                          task._lastQty = task.qtyCompleted;
                          task.qtyCompleted = newQty;
-                         hasUnsyncedChanges = true;
+                         setUnsyncedChanges(true); // USE SETTER
                     }
                     
                     task.status = newStatus;
@@ -1821,7 +1842,7 @@
                 renderContractorProjectCards();
             }
 
-            hasUnsyncedChanges = true;
+            setUnsyncedChanges(true); // USE SETTER
         }
         
         // --- DATA CLEANUP FOR SYNC ---
@@ -1963,7 +1984,7 @@
                 try {
                     await syncAdminData();
                     showToast("All data synced successfully!");
-                    hasUnsyncedChanges = false;
+                    setUnsyncedChanges(false); // USE SETTER
                 } catch (error) {
                     console.error("Sync failed:", error);
                     showToast(`Sync failed: ${error.message}`, 'error');
@@ -1975,7 +1996,7 @@
                 try {
                     await syncAllContractorProjects(); 
                     showToast("All your projects are synced!");
-                    hasUnsyncedChanges = false;
+                    setUnsyncedChanges(false); // USE SETTER
                 } catch (error) {
                     console.error("Sync failed for some projects:", error);
                     if (Array.isArray(error)) {
@@ -2174,7 +2195,7 @@
                 }
             }
             // Reset state after attempting sync
-            hasUnsyncedChanges = false;
+            setUnsyncedChanges(false); // USE SETTER
         }
 
 
@@ -2186,7 +2207,7 @@
             localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
             currentRole = null;
             allProjectsCache = [];
-            hasUnsyncedChanges = false; // MUST reset changes state
+            setUnsyncedChanges(false); // USE SETTER
             
             showView('login');
             // Clear dynamic content
@@ -2249,18 +2270,19 @@
                         // Admin loads from local initially
                         currentUserEl.textContent = `Logged in as Admin`;
                         syncDataButton.classList.remove('hidden'); 
-                        syncDataButton.querySelector('.btn-text').textContent = 'Update Database';
-                        syncDataButton.disabled = false;
+                        updateSyncButtonState();
                         renderAdminProjects();
                         showView('admin');
                     } else if (currentRole === 'contractor' && user.username) {
                         // Contractor loads from local initially
                         currentUserEl.textContent = `Logged in as: ${escapeHTML(user.username)}`;
                         syncDataButton.classList.remove('hidden'); 
-                        syncDataButton.querySelector('.btn-text').textContent = 'Send to Client';
-                        syncDataButton.disabled = false;
+                        // IMPORTANT: Set to false on load unless the local cache explicitly marks it as true (not implemented yet)
+                        setUnsyncedChanges(false); 
+                        
+                        updateSyncButtonState();
                         renderContractorProjectCards();
-                        showToast("Data loaded from local cache. Click 'Update Database' to sync updates.", 'warning');
+                        showToast("Data loaded from local cache. Click 'Update to Database' to sync updates.", 'warning');
                         showView('contractor');
                     } else {
                         // Invalid state, log out
@@ -2313,11 +2335,10 @@
                 
                 currentUserEl.textContent = `Logged in as: ${escapeHTML(username)}`;
                 syncDataButton.classList.remove('hidden'); 
-                syncDataButton.querySelector('.btn-text').textContent = 'Send to Client';
-                syncDataButton.disabled = false;
+                updateSyncButtonState();
                 
                 renderContractorProjectCards();
-                showToast("Data loaded from local cache. Click 'Update Database' to sync updates.", 'warning');
+                showToast("Data loaded from local cache. Click 'Update to Database' to sync updates.", 'warning');
                 showView('contractor');
                 return; 
             }
@@ -2342,8 +2363,7 @@
                     
                     currentUserEl.textContent = `Logged in as: ${escapeHTML(username)}`;
                     syncDataButton.classList.remove('hidden'); 
-                    syncDataButton.querySelector('.btn-text').textContent = 'Send to Client';
-                    syncDataButton.disabled = false;
+                    setUnsyncedChanges(false); // Fresh data means no unsynced changes
                     
                     renderContractorProjectCards();
                     showToast("Projects fetched and loaded from database.", 'success');
